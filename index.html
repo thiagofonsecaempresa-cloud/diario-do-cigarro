@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>Diário do Cigarro</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#172033;--muted:#667085;--line:#e5e7eb;--accent:#2563eb;--danger:#b42318;--ok:#067647}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--text)}
+header{background:#111827;color:white;padding:18px 16px calc(16px + env(safe-area-inset-top));position:sticky;top:0;z-index:5}
+h1{font-size:22px;margin:0 0 4px}.sub{font-size:13px;color:#cbd5e1}
+main{max-width:760px;margin:auto;padding:14px 12px 100px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px #00000008}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px}
+input,select,textarea,button{font:inherit} input,select,textarea{width:100%;border:1px solid #d0d5dd;border-radius:10px;padding:11px;background:white;color:var(--text)}
+textarea{min-height:72px;resize:vertical}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:white}.secondary{background:#eef2f6;color:#172033}.danger{background:#fee4e2;color:var(--danger)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f8fafc;border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:21px}.stat span{font-size:11px;color:var(--muted)}
+h2{font-size:16px;margin:0 0 10px}.hint{font-size:12px;color:var(--muted);line-height:1.4}.smoke{border-top:1px solid var(--line);padding:12px 0}.smoke:first-child{border-top:0}.smoke-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.num{font-weight:800}.time{font-weight:800;color:var(--accent)}.remove{border:0;background:transparent;color:var(--danger);font-weight:700}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+footer{font-size:11px;color:var(--muted);text-align:center;margin-top:14px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.stats .stat b{font-size:18px}}
+</style>
+</head>
+<body>
+<header><h1>Diário do Cigarro</h1><div class="sub">Registro rápido, local e privado. Os dados ficam neste aparelho.</div></header>
+<main>
+<section class="card">
+  <div class="grid">
+    <div class="field"><label>Data</label><input id="date" type="date"></div>
+    <div class="field"><label>Dia</label><input id="dayLabel" placeholder="Ex.: quarta-feira"></div>
+    <div class="field"><label>Contexto</label><select id="context"><option>Presencial</option><option>Home office</option><option>Fim de semana</option><option>Outro</option></select></div>
+    <div class="field"><label>Quem está registrando</label><input id="person" placeholder="Digite seu nome"></div>
+  </div>
+</section>
+
+<section class="card">
+<h2>Resumo do dia</h2>
+<div class="stats">
+<div class="stat"><b id="total">0</b><span>cigarros</span></div>
+<div class="stat"><b id="avg">—</b><span>vontade média</span></div>
+<div class="stat"><b id="interval">—</b><span>intervalo médio</span></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Novo registro</h2>
+<div class="grid">
+<div class="field"><label>Horário</label><input id="time" type="time"></div>
+<div class="field"><label>Vontade (0–10)</label><input id="urge" type="number" min="0" max="10" step="1" placeholder="Ex.: 8"></div>
+<div class="field"><label>Gatilho</label><select id="trigger">
+<option>Não sei</option><option>Café</option><option>Antes de comer</option><option>Depois de comer</option><option>Dirigindo</option><option>Trabalho/pausa</option><option>Estresse/nervosismo</option><option>Social</option><option>Em casa</option><option>Sexo/intimidade</option><option>Automático/hábito</option><option>Outro</option>
+</select></div>
+<div class="field"><label>Foi fácil adiar?</label><select id="delay"><option>Não tentei</option><option>Sim</option><option>Não</option><option>Esperei por preguiça de anotar</option></select></div>
+</div>
+<div class="field" style="margin-top:10px"><label>Observação</label><textarea id="note" placeholder="Ex.: passei por determinado ponto da estrada; fiquei nervoso; café depois do jantar..."></textarea></div>
+<div class="actions" style="margin-top:10px"><button class="btn primary" onclick="addSmoke()">Registrar cigarro</button></div>
+</section>
+
+<section class="card">
+<h2>Registros</h2>
+<div id="list"><div class="empty">Nenhum cigarro registrado neste dia.</div></div>
+</section>
+
+<section class="card">
+<h2>Dados</h2>
+<div class="actions">
+<button class="btn secondary" onclick="exportJSON()">Exportar backup (.json)</button>
+<button class="btn secondary" onclick="document.getElementById('importFile').click()">Importar backup</button>
+<input id="importFile" type="file" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+<button class="btn secondary" onclick="exportCSV()">Exportar CSV</button>
+<button class="btn danger" onclick="clearDay()">Apagar este dia</button>
+</div>
+<p class="hint" style="margin-bottom:0">O app começa vazio. Digite o nome de quem está usando e os registros serão salvos automaticamente neste navegador. Para não perder os dados ao trocar de aparelho ou navegador, faça um backup periodicamente. Se trocar ou formatar o celular, use “Importar backup” para restaurar os dados.</p>
+</section>
+<footer>
+      Feito para registrar sem transformar cada cigarro numa burocracia de Estado.<br>
+      <strong>Diário do Cigarro</strong> · Desenvolvido por <strong>Thiago Fonseca</strong><br>
+      © 2026 Thiago Fonseca · Todos os direitos reservados.
+    </footer>
+</main>
+
+<script>
+const KEY="diario_cigarro_v1";
+let db=JSON.parse(localStorage.getItem(KEY)||"{}");
+const $=id=>document.getElementById(id);
+function today(){let d=new Date(); return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+$("date").value=today();
+function day(){return $("date").value}
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function savedPerson(){
+ let p=localStorage.getItem("diario_cigarro_person")||"";
+ $("person").value=p;
+ return p;
+}
+$("person").addEventListener("input",()=>localStorage.setItem("diario_cigarro_person",$("person").value.trim()));
+function get(){if(!db[day()]) db[day()]={context:$("context").value,records:[]}; return db[day()]}
+function setDefaults(){let d=get(); $("context").value=d.context||"Presencial"; $("dayLabel").value=new Date(day()+"T12:00").toLocaleDateString("pt-BR",{weekday:"long"}); render()}
+$("date").addEventListener("change",setDefaults);
+$("context").addEventListener("change",()=>{get().context=$("context").value;save()});
+setDefaults(); savedPerson();
+function addSmoke(){
+ let p=$("person").value.trim();
+ if(!p){alert("Digite o nome de quem está registrando."); $("person").focus(); return}
+ let t=$("time").value, u=$("urge").value;
+ if(!t){alert("Coloque o horário.");return}
+ if(u===""||u<0||u>10){alert("A vontade precisa ficar entre 0 e 10.");return}
+ let d=get();
+ d.records.push({time:t,urge:Number(u),trigger:$("trigger").value,delay:$("delay").value,note:$("note").value.trim(),person:p});
+ d.records.sort((a,b)=>a.time.localeCompare(b.time)); save(); render();
+ let now=new Date(); $("time").value=now.toTimeString().slice(0,5); $("urge").value=""; $("note").value="";
+}
+function mins(a,b){let [ah,am]=a.split(":").map(Number),[bh,bm]=b.split(":").map(Number);return (bh*60+bm)-(ah*60+am)}
+function fmt(m){if(m<60)return m+" min";let h=Math.floor(m/60),r=m%60;return h+"h"+(r?" "+r+"min":"")}
+function render(){
+ let d=get(), r=d.records||[]; $("total").textContent=r.length;
+ $("avg").textContent=r.length?(r.reduce((s,x)=>s+x.urge,0)/r.length).toFixed(1):"—";
+ let ints=[];for(let i=1;i<r.length;i++){let x=mins(r[i-1].time,r[i].time);if(x>=0)ints.push(x)}
+ $("interval").textContent=ints.length?fmt(Math.round(ints.reduce((a,b)=>a+b,0)/ints.length)):"—";
+ $("list").innerHTML=r.length?r.map((x,i)=>`<div class="smoke"><div class="smoke-head"><span class="num">#${i+1} · <span class="time">${x.time}</span></span><button class="remove" onclick="removeSmoke(${i})">Excluir</button></div><div class="grid"><div><b>Vontade:</b> ${x.urge}/10</div><div><b>Gatilho:</b> ${x.trigger}</div><div><b>Adiar:</b> ${x.delay}</div><div><b>Registrou:</b> ${x.person}</div></div>${x.note?`<p class="hint"><b>Obs.:</b> ${esc(x.note)}</p>`:""}</div>`).join(""):'<div class="empty">Nenhum cigarro registrado neste dia.</div>';
+}
+function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function removeSmoke(i){get().records.splice(i,1);save();render()}
+function clearDay(){if(confirm("Apagar todos os registros deste dia?")){delete db[day()];save();setDefaults()}}
+function download(name,text,type){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function importJSON(event){
+ let file=event.target.files&&event.target.files[0];
+ if(!file)return;
+ let reader=new FileReader();
+ reader.onload=function(){
+   try{
+     let incoming=JSON.parse(reader.result);
+     if(!incoming || typeof incoming!=="object" || Array.isArray(incoming)){
+       throw new Error("Formato inválido");
+     }
+     let validDays={};
+     for(const [date,data] of Object.entries(incoming)){
+       if(!/^\d{4}-\d{2}-\d{2}$/.test(date) || !data || !Array.isArray(data.records)) continue;
+       validDays[date]={
+         context:data.context||"Outro",
+         records:data.records.map(r=>({
+           time:String(r.time||""),
+           urge:Number(r.urge||0),
+           trigger:String(r.trigger||"Não sei"),
+           delay:String(r.delay||"Não tentei"),
+           note:String(r.note||""),
+           person:String(r.person||$("person").value)
+         })).filter(r=>/^\d{2}:\d{2}$/.test(r.time) && r.urge>=0 && r.urge<=10)
+       };
+     }
+     if(!Object.keys(validDays).length) throw new Error("Nenhum dia válido encontrado");
+     let replace=confirm("Deseja substituir os dados atuais pelo backup?\\n\\nOK = substituir\\nCancelar = mesclar o backup aos dados atuais");
+     if(replace){
+       db=validDays;
+     }else{
+       for(const [date,data] of Object.entries(validDays)){
+         if(!db[date]) db[date]={context:data.context,records:[]};
+         db[date].context=data.context||db[date].context;
+         db[date].records=[...(db[date].records||[]),...(data.records||[])];
+         db[date].records.sort((a,b)=>a.time.localeCompare(b.time));
+       }
+     }
+     save(); setDefaults();
+     alert("Backup importado com sucesso.");
+   }catch(e){
+     alert("Não consegui importar este arquivo. Use um backup .json gerado por este app.");
+   }
+   event.target.value="";
+ };
+ reader.readAsText(file);
+}
+function exportJSON(){download("diario-cigarro-backup.json",JSON.stringify(db,null,2),"application/json")}
+function exportCSV(){
+ let rows=[["Data","Contexto","Pessoa","Nº","Horário","Vontade","Gatilho","Foi fácil adiar?","Observação"]];
+ Object.entries(db).forEach(([date,d])=>(d.records||[]).forEach((r,i)=>rows.push([date,d.context||"",r.person||"",i+1,r.time,r.urge,r.trigger,r.delay,r.note||""])));
+ let csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\n");
+ download("diario-cigarro.csv","\ufeff"+csv,"text/csv;charset=utf-8")
+}
+</script>
+</body></html>
