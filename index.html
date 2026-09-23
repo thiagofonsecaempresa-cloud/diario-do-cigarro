@@ -15,7 +15,7 @@ main{max-width:760px;margin:auto;padding:14px 12px 100px}.card{background:var(--
 input,select,textarea,button{font:inherit} input,select,textarea{width:100%;border:1px solid #d0d5dd;border-radius:10px;padding:11px;background:white;color:var(--text)}
 textarea{min-height:72px;resize:vertical}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}.primary{background:var(--accent);color:white}.secondary{background:#eef2f6;color:#172033}.danger{background:#fee4e2;color:var(--danger)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f8fafc;border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:21px}.stat span{font-size:11px;color:var(--muted)}
-h2{font-size:16px;margin:0 0 10px}.hint{font-size:12px;color:var(--muted);line-height:1.4}.smoke{border-top:1px solid var(--line);padding:12px 0}.smoke:first-child{border-top:0}.smoke-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.num{font-weight:800}.time{font-weight:800;color:var(--accent)}.remove{border:0;background:transparent;color:var(--danger);font-weight:700}
+h2{font-size:16px;margin:0 0 10px}.hint{font-size:12px;color:var(--muted);line-height:1.4}.smoke{border-top:1px solid var(--line);padding:12px 0}.smoke:first-child{border-top:0}.smoke-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.num{font-weight:800}.time{font-weight:800;color:var(--accent)}.remove{border:0;background:transparent;color:var(--danger);font-weight:700}.danger-small{font-size:12px;padding:7px 9px;opacity:.82}
 .empty{padding:20px;text-align:center;color:var(--muted)}
 footer{font-size:11px;color:var(--muted);text-align:center;margin-top:14px}
 @media(max-width:520px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.stats .stat b{font-size:18px}}
@@ -28,7 +28,7 @@ footer{font-size:11px;color:var(--muted);text-align:center;margin-top:14px}
   <div class="grid">
     <div class="field"><label>Data</label><input id="date" type="date"></div>
     <div class="field"><label>Dia</label><input id="dayLabel" placeholder="Ex.: quarta-feira"></div>
-    <div class="field"><label>Contexto</label><select id="context"><option>Presencial</option><option>Home office</option><option>Fim de semana</option><option>Outro</option></select></div>
+    <div class="field"><label>Contexto</label><select id="context"><option>Trabalho presencial</option><option>Home office</option><option>Casa</option><option>Social</option><option>Fim de semana</option><option>Outro</option></select></div>
     <div class="field"><label>Quem está registrando</label><input id="person" placeholder="Digite seu nome"></div>
   </div>
 </section>
@@ -50,7 +50,8 @@ footer{font-size:11px;color:var(--muted);text-align:center;margin-top:14px}
 <div class="field"><label>Gatilho</label><select id="trigger">
 <option>Não sei</option><option>Café</option><option>Antes de comer</option><option>Depois de comer</option><option>Dirigindo</option><option>Trabalho/pausa</option><option>Estresse/nervosismo</option><option>Social</option><option>Em casa</option><option>Sexo/intimidade</option><option>Automático/hábito</option><option>Outro</option>
 </select></div>
-<div class="field"><label>Foi fácil adiar?</label><select id="delay"><option>Não tentei</option><option>Sim</option><option>Não</option><option>Esperei por preguiça de anotar</option></select></div>
+<div class="field" id="triggerOtherWrap" style="display:none"><label>Qual foi o gatilho?</label><input id="triggerOther" type="text" placeholder="Descreva o gatilho"></div>
+<div class="field"><label>Foi fácil adiar?</label><select id="delay"><option>Não tentei</option><option>Muito difícil</option><option>Difícil</option><option>Um pouco difícil</option><option>Mais ou menos</option><option>Fácil</option><option>Muito fácil</option><option>Esperei por preguiça de anotar</option></select></div>
 </div>
 <div class="field" style="margin-top:10px"><label>Observação</label><textarea id="note" placeholder="Ex.: passei por determinado ponto da estrada; fiquei nervoso; café depois do jantar..."></textarea></div>
 <div class="actions" style="margin-top:10px"><button class="btn primary" onclick="addSmoke()">Registrar cigarro</button></div>
@@ -65,10 +66,12 @@ footer{font-size:11px;color:var(--muted);text-align:center;margin-top:14px}
 <h2>Dados</h2>
 <div class="actions">
 <button class="btn secondary" onclick="exportJSON()">Exportar backup (.json)</button>
-<button class="btn secondary" onclick="document.getElementById('importFile').click()">Importar backup</button>
+<button class="btn secondary" onclick="document.getElementById('importFile').click()">Importar JSON</button>
 <input id="importFile" type="file" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+<button class="btn secondary" onclick="document.getElementById('importExcelFile').click()">Importar Excel</button>
+<input id="importExcelFile" type="file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event)">
 <button class="btn secondary" onclick="exportCSV()">Exportar CSV</button>
-<button class="btn danger" onclick="clearDay()">Apagar este dia</button>
+<button class="btn danger danger-small" onclick="clearDay()">Apagar este dia</button>
 </div>
 <p class="hint" style="margin-bottom:0">O app começa vazio. Digite o nome de quem está usando e os registros serão salvos automaticamente neste navegador. Para não perder os dados ao trocar de aparelho ou navegador, faça um backup periodicamente. Se trocar ou formatar o celular, use “Importar backup” para restaurar os dados.</p>
 </section>
@@ -79,6 +82,7 @@ footer{font-size:11px;color:var(--muted);text-align:center;margin-top:14px}
     </footer>
 </main>
 
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 const KEY="diario_cigarro_v1";
 let db=JSON.parse(localStorage.getItem(KEY)||"{}");
@@ -98,6 +102,13 @@ function setDefaults(){let d=get(); $("context").value=d.context||"Presencial"; 
 $("date").addEventListener("change",setDefaults);
 $("context").addEventListener("change",()=>{get().context=$("context").value;save()});
 setDefaults(); savedPerson();
+function toggleTriggerOther(){
+ const show=$("trigger").value==="Outro";
+ $("triggerOtherWrap").style.display=show?"block":"none";
+ if(!show) $("triggerOther").value="";
+}
+$("trigger").addEventListener("change",toggleTriggerOther);
+toggleTriggerOther();
 function addSmoke(){
  let p=$("person").value.trim();
  if(!p){alert("Digite o nome de quem está registrando."); $("person").focus(); return}
@@ -105,8 +116,9 @@ function addSmoke(){
  if(!t){alert("Coloque o horário.");return}
  if(u===""||u<0||u>10){alert("A vontade precisa ficar entre 0 e 10.");return}
  let d=get();
- d.records.push({time:t,urge:Number(u),trigger:$("trigger").value,delay:$("delay").value,note:$("note").value.trim(),person:p});
+ d.records.push({time:t,urge:Number(u),trigger:$("trigger").value,triggerOther:$("triggerOther").value.trim(),delay:$("delay").value,note:$("note").value.trim(),person:p});
  d.records.sort((a,b)=>a.time.localeCompare(b.time)); save(); render();
+ $("triggerOther").value=""; toggleTriggerOther();
  let now=new Date(); $("time").value=now.toTimeString().slice(0,5); $("urge").value=""; $("note").value="";
 }
 function mins(a,b){let [ah,am]=a.split(":").map(Number),[bh,bm]=b.split(":").map(Number);return (bh*60+bm)-(ah*60+am)}
@@ -116,11 +128,11 @@ function render(){
  $("avg").textContent=r.length?(r.reduce((s,x)=>s+x.urge,0)/r.length).toFixed(1):"—";
  let ints=[];for(let i=1;i<r.length;i++){let x=mins(r[i-1].time,r[i].time);if(x>=0)ints.push(x)}
  $("interval").textContent=ints.length?fmt(Math.round(ints.reduce((a,b)=>a+b,0)/ints.length)):"—";
- $("list").innerHTML=r.length?r.map((x,i)=>`<div class="smoke"><div class="smoke-head"><span class="num">#${i+1} · <span class="time">${x.time}</span></span><button class="remove" onclick="removeSmoke(${i})">Excluir</button></div><div class="grid"><div><b>Vontade:</b> ${x.urge}/10</div><div><b>Gatilho:</b> ${x.trigger}</div><div><b>Adiar:</b> ${x.delay}</div><div><b>Registrou:</b> ${x.person}</div></div>${x.note?`<p class="hint"><b>Obs.:</b> ${esc(x.note)}</p>`:""}</div>`).join(""):'<div class="empty">Nenhum cigarro registrado neste dia.</div>';
+ $("list").innerHTML=r.length?r.map((x,i)=>`<div class="smoke"><div class="smoke-head"><span class="num">#${i+1} · <span class="time">${x.time}</span></span><button class="remove" onclick="removeSmoke(${i})">Excluir</button></div><div class="grid"><div><b>Vontade:</b> ${x.urge}/10</div><div><b>Gatilho:</b> ${esc(x.trigger)}${x.triggerOther?` · ${esc(x.triggerOther)}`:""}</div><div><b>Adiar:</b> ${x.delay}</div><div><b>Registrou:</b> ${x.person}</div></div>${x.note?`<p class="hint"><b>Obs.:</b> ${esc(x.note)}</p>`:""}</div>`).join(""):'<div class="empty">Nenhum cigarro registrado neste dia.</div>';
 }
 function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function removeSmoke(i){get().records.splice(i,1);save();render()}
-function clearDay(){if(confirm("Apagar todos os registros deste dia?")){delete db[day()];save();setDefaults()}}
+function clearDay(){if(confirm("Excluir todos os registros deste dia? Esta ação não pode ser desfeita.")){delete db[day()];save();setDefaults()}}
 function download(name,text,type){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function importJSON(event){
  let file=event.target.files&&event.target.files[0];
@@ -141,6 +153,7 @@ function importJSON(event){
            time:String(r.time||""),
            urge:Number(r.urge||0),
            trigger:String(r.trigger||"Não sei"),
+           triggerOther:String(r.triggerOther||""),
            delay:String(r.delay||"Não tentei"),
            note:String(r.note||""),
            person:String(r.person||$("person").value)
@@ -167,6 +180,58 @@ function importJSON(event){
    event.target.value="";
  };
  reader.readAsText(file);
+}
+function importExcel(event){
+ let file=event.target.files&&event.target.files[0];
+ if(!file)return;
+ if(typeof XLSX==="undefined"){alert("A biblioteca de Excel não carregou. Verifique sua conexão com a internet e tente novamente.");event.target.value="";return}
+ let reader=new FileReader();
+ reader.onload=function(){
+   try{
+     let wb=XLSX.read(reader.result,{type:"array",cellDates:true});
+     let rows=[];
+     wb.SheetNames.forEach(name=>{
+       const ws=wb.Sheets[name];
+       rows=rows.concat(XLSX.utils.sheet_to_json(ws,{defval:""}));
+     });
+     const norm=v=>String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+     const find=(row,names)=>{for(const k of Object.keys(row)){if(names.includes(norm(k)))return row[k]}return ""};
+     const toDate=v=>{
+       if(v instanceof Date)return v.toISOString().slice(0,10);
+       const s=String(v??"").trim();
+       if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+       let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/); if(m)return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;
+       return "";
+     };
+     const toTime=v=>{
+       if(v instanceof Date)return v.toTimeString().slice(0,5);
+       const s=String(v??"").trim();
+       const m=s.match(/(\d{1,2}):(\d{2})/); return m?`${m[1].padStart(2,"0")}:${m[2]}`:"";
+     };
+     let validDays={};
+     for(const row of rows){
+       const date=toDate(find(row,["data","date"]));
+       const time=toTime(find(row,["horario","hora","time"]));
+       const urge=Number(String(find(row,["vontade","urge"])).replace(",","."));
+       if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!/^\d{2}:\d{2}$/.test(time)||!Number.isFinite(urge)||urge<0||urge>10)continue;
+       const context=String(find(row,["contexto","context"] )||"Outro");
+       const person=String(find(row,["pessoa","quem esta registrando","quem esta registrando","person"])||$("person").value);
+       const trigger=String(find(row,["gatilho","trigger"])||"Não sei");
+       const delay=String(find(row,["foi facil adiar","foi facil adiar?","delay","adiar"])||"Não tentei");
+       const note=String(find(row,["observacao","observacao","observacao","note"])||"");
+       const triggerOther=String(find(row,["detalhe do gatilho","qual foi o gatilho","gatilho outro","triggerother"])||"");
+       if(!validDays[date])validDays[date]={context,records:[]};
+       validDays[date].records.push({time,urge,trigger,triggerOther,delay,note,person});
+     }
+     if(!Object.keys(validDays).length)throw new Error("Nenhum registro válido encontrado");
+     const replace=confirm("Deseja substituir os dados atuais pelos registros do Excel?\n\nOK = substituir\nCancelar = mesclar aos dados atuais");
+     if(replace) db=validDays;
+     else for(const [date,data] of Object.entries(validDays)){if(!db[date])db[date]={context:data.context,records:[]};db[date].context=data.context||db[date].context;db[date].records=[...(db[date].records||[]),...(data.records||[])];db[date].records.sort((a,b)=>a.time.localeCompare(b.time));}
+     save();setDefaults();alert("Excel importado com sucesso.");
+   }catch(e){alert("Não consegui importar este Excel. Use uma planilha com colunas Data, Contexto, Pessoa, Horário, Vontade, Gatilho, Foi fácil adiar? e Observação.");}
+   event.target.value="";
+ };
+ reader.readAsArrayBuffer(file);
 }
 function exportJSON(){download("diario-cigarro-backup.json",JSON.stringify(db,null,2),"application/json")}
 function exportCSV(){
